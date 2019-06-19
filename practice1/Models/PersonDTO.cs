@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace practice1.Models
 {
-    public class Person
+    public class PersonDTO 
     {
         public int Id { get; set; }
         public string Login { get; set; }
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
+        public string Password { get; set; }
+        public string Role { get; set; }
 
     }
 }
