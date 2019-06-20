@@ -123,6 +123,7 @@ namespace practice1
                 .AllowAnyHeader());
 
             app.UseMvc();
+            app.UseAuthentication();
             app.UseSwagger();
 
             app.UseSwaggerUI(c =>
@@ -144,7 +145,7 @@ namespace practice1
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            app.UseAuthentication();
+            
 
             
         }

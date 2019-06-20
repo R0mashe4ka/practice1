@@ -12,8 +12,8 @@ namespace practice1.Helpers
 
         public AutoMapperProfile()
         {
-            CreateMap<Person, PersonDTO>();
-            CreateMap<PersonDTO, Person>();
+            CreateMap<Person, PersonDTO>().ReverseMap();
+            //CreateMap<PersonDTO, Person>();
         }
 
     }
