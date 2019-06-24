@@ -4,20 +4,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace practice1.Services
 {
-    public interface IPersonService
+    public interface IUserService
     {
-        Person Authenticate(string login, string password);
-        IEnumerable<Person> GetAll();
-        Person GetById(int id);
-        Person Create(Person person, string password);
-        void Update(Person person, string password = null);
+        //User Authenticate(string login, string password);
+        IEnumerable<User> GetAll();
+        User GetById(int id);
+        User Create(User user);
+        void Update(User newuser);
         void Delete(int id);
     }
 
-    public class PersonService : IPersonService
+    public class PersonService : IUserService
     {
         private DataContext _context;
 
@@ -26,128 +27,63 @@ namespace practice1.Services
             _context = context;
         }
 
-        public Person Authenticate(string login, string password)
+        //public User Authenticate(string login, string password)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        public User Create(User user)
         {
-            if (string.IsNullOrEmpty(login) || string.IsNullOrEmpty(password))
-                return null;
+            //throw new NotImplementedException();
 
-            var person = _context.People.SingleOrDefault(x => x.Login == login);
+            _context.Users.Add(user);
 
-            // check if username exists
-            if (person == null)
-                return null;
+            var salt = Salt.Create();
+            var hash = Hash.Create(user.Password, salt);
+            user.Password = hash;
+               
 
-            // check if password is correct
-            if (!VerifyPasswordHash(password, person.PasswordHash, person.PasswordSalt))
-                return null;
-
-            // authentication successful
-            return person;
-        }
-
-        public IEnumerable<Person> GetAll()
-        {
-            return _context.People;
-        }
-
-        public Person GetById(int id)
-        {
-            return _context.People.Find(id);
-        }
-
-        public Person Create(Person person, string password)
-        {
-            // validation
-            if (string.IsNullOrWhiteSpace(password))
-                throw new AppException("Password is required");
-
-            if (_context.People.Any(x => x.Login == person.Login))
-                throw new AppException("Login \"" + person.Login + "\" is already taken");
-
-            byte[] passwordHash, passwordSalt;
-            CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
-            person.PasswordHash = passwordHash;
-            person.PasswordSalt = passwordSalt;
-
-            _context.People.Add(person);
             _context.SaveChanges();
 
-            return person;
-        }
-
-        public void Update(Person personParam, string password = null)
-        {
-            var person = _context.People.Find(personParam.Id);
-
-            if (person == null)
-                throw new AppException("User not found");
-
-            if (personParam.Login != person.Login)
-            {
-                // username has changed so check if the new username is already taken
-                if (_context.People.Any(x => x.Login == personParam.Login))
-                    throw new AppException("Login " + personParam.Login + " is already taken");
-            }
-
-            // update user properties
-            person.Login = personParam.Login;
-
-            // update password if it was entered
-            if (!string.IsNullOrWhiteSpace(password))
-            {
-                byte[] passwordHash, passwordSalt;
-                CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
-                person.PasswordHash = passwordHash;
-                person.PasswordSalt = passwordSalt;
-            }
-
-            _context.People.Update(person);
-            _context.SaveChanges();
+            return user;
         }
 
         public void Delete(int id)
         {
-            var person = _context.People.Find(id);
-            if (person != null)
+            var user = _context.Users.Find(id);
+            if (user != null)
             {
-                _context.People.Remove(person);
+                _context.Users.Remove(user);
                 _context.SaveChanges();
             }
         }
 
-        // private helper methods
-
-        private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        public IEnumerable<User> GetAll()
         {
-            if (password == null) throw new ArgumentNullException("password");
-            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Value cannot be empty or whitespace only string.", "password");
+            var usercomp = _context.Users
+            .Include(c => c.Company)
+            .ToList();
+            return _context.Users;
 
-            using (var hmac = new System.Security.Cryptography.HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
         }
 
-        private static bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
+        public User GetById(int id)
         {
-            if (password == null) throw new ArgumentNullException("password");
-            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Value cannot be empty or whitespace only string.", "password");
-            if (storedHash.Length != 64) throw new ArgumentException("Invalid length of password hash (64 bytes expected).", "passwordHash");
-            if (storedSalt.Length != 128) throw new ArgumentException("Invalid length of password salt (128 bytes expected).", "passwordHash");
+            return _context.Users.Find(id);
+        }
 
-            using (var hmac = new System.Security.Cryptography.HMACSHA512(storedSalt))
-            {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                for (int i = 0; i < computedHash.Length; i++)
-                {
-                    if (computedHash[i] != storedHash[i]) return false;
-                }
-            }
+        public void Update(User newuser)
+        {
+            var user1  = _context.Users.Find(newuser.UserId);
 
-            return true;
+            user1.Name = newuser.Name;
+            user1.Address = newuser.Address;
+            user1.PhoneNumber = newuser.PhoneNumber;
+            
+            var salt = Salt.Create();
+            var hash = Hash.Create(user1.Password, salt);
+            user1.Password = hash;
+
         }
     }
 }

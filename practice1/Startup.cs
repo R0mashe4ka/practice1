@@ -28,13 +28,13 @@ namespace practice1
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //string connection = Configuration.GetConnectionString("DefaultConnection");
-            //services.AddDbContext<Person>(options =>  options.UseSqlServer(connection));
+            string connection = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<DataContext>(options =>  options.UseSqlServer(connection));
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddCors();
-            services.AddDbContext<DataContext>(x => x.UseInMemoryDatabase("PeopleDB"));
+            //services.AddDbContext<DataContext>(x => x.UseInMemoryDatabase("PeopleDB"));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
@@ -43,7 +43,7 @@ namespace practice1
                     { "Bearer", Enumerable.Empty<string>() },
                 });
             });
-
+            services.AddScoped<IUserService, PersonService>();
             //services.AddAutoMapper();
 
             //var config = new AutoMapper.MapperConfiguration(cfg =>
@@ -58,11 +58,11 @@ namespace practice1
 
 
             var appSettingsSection = Configuration.GetSection("AppSettings");
-            services.Configure<AppSettings>(appSettingsSection);
+            //services.Configure<AppSettings>(appSettingsSection);
 
             // configure jwt authentication
-            var appSettings = appSettingsSection.Get<AppSettings>();
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            //var appSettings = appSettingsSection.Get<AppSettings>();
+            //var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             //services.AddAuthentication(x =>
             //    {
             //        x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
