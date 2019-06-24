@@ -83,7 +83,7 @@ namespace practice1.Services
             var salt = Salt.Create();
             var hash = Hash.Create(user1.Password, salt);
             user1.Password = hash;
-
+            _context.SaveChanges();
         }
     }
 }
